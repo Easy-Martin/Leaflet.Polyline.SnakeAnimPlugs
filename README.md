@@ -1,4 +1,4 @@
-# Leaflet.Polyline.SnakeAnim
+# fork Leaflet.Polyline.SnakeAnim
 
 A plugin for [LeafletJS](http://www.leafletjs.com) to make polylines animate into existence.
 
@@ -41,14 +41,8 @@ route.addTo(map).snakeIn();
 ```
 
 When a polyline or layer group is performing the snaking animation, it will
-fire `snakestart`, `snake` and `snakeend` events.
-
-### Legalese
+fire `snakestart`, `snake` , `snakeend` and `snakechange` events.
 
 
-"THE BEER-WARE LICENSE":
-<ivan@sanchezortega.es> wrote this file. As long as you retain this notice you
-can do whatever you want with this stuff. If we meet some day, and you think
-this stuff is worth it, you can buy me a beer in return.
 
 
