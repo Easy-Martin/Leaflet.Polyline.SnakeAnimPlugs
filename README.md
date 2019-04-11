@@ -1,5 +1,7 @@
 # fork Leaflet.Polyline.SnakeAnim
 
+[Leaflet.Polyline.SnakeAnim](https://github.com/IvanSanchez/Leaflet.Polyline.SnakeAnim)
+
 A plugin for [LeafletJS](http://www.leafletjs.com) to make polylines animate into existence.
 
 
