@@ -4,10 +4,10 @@
 ///// FIXME: Implement layerGroup.snakeIn() / Out()
 
 L.Polyline.include({
-	// Hi-res timestamp indicating when the last calculations for vertices and
-	// distance took place.
-	_snakingTimestamp: 0,
-	
+  // Hi-res timestamp indicating when the last calculations for vertices and
+  // distance took place.
+  _snakingTimestamp: 0,
+
   // How many rings and vertices we've already visited
   // Yeah, yeah, "rings" semantically only apply to polygons, but L.Polyline
   // internally uses that nomenclature.
@@ -34,7 +34,7 @@ L.Polyline.include({
 
     this._snaking = true;
     this._snakingTime = performance.now();
-	this._snakingVertices = this._snakingRings = this._snakingDistance = 0;
+    this._snakingVertices = this._snakingRings = this._snakingDistance = 0;
 
     if (!this._snakeLatLngs) {
       this._snakeLatLngs = L.LineUtil.isFlat(this._latlngs) ? [this._latlngs] : this._latlngs;
@@ -56,10 +56,10 @@ L.Polyline.include({
     }
 
     var now = performance.now();
-	var diff = now - this._snakingTime;	// In milliseconds
-	var forward = diff * this.options.snakingSpeed / 1000;	// In pixels
-	this._snakingTime = now;
-		
+    var diff = now - this._snakingTime; // In milliseconds
+    var forward = (diff * this.options.snakingSpeed) / 1000; // In pixels
+    this._snakingTime = now;
+
     // Chop the head from the previous frame
     this._latlngs[this._snakingRings].pop();
 
@@ -68,7 +68,7 @@ L.Polyline.include({
 
   _snakeForward: function(forward) {
     // If polyline has been removed from the map stop _snakeForward
-    if (!this._map) return;
+    if (!this._map) {return}
     // Calculate distance from current vertex to next vertex
     var currPoint = this._map.latLngToContainerPoint(this._snakeLatLngs[this._snakingRings][this._snakingVertices]);
     var nextPoint = this._map.latLngToContainerPoint(this._snakeLatLngs[this._snakingRings][this._snakingVertices + 1]);
@@ -120,12 +120,13 @@ L.Polyline.include({
   snakePause: function() {
     this._snaking = false;
     this.fire("snakepause");
+    return this;
   },
   snakePlay: function() {
     if (this._snaking) {
       return;
     }
-	this._snakingTime = performance.now()
+    this._snakingTime = performance.now();
     this._snaking = true;
     this._snake();
     this.fire("snakeplay");
@@ -168,6 +169,7 @@ L.LayerGroup.include({
     if (this._snakingLayersDone >= this._snakingLayers.length) {
       this._currentLayer.off("snake");
       this.fire("snakeend");
+      this.fire("snakechange", { index: this._snakingLayersDone });
       this._snaking = false;
       return;
     }
@@ -175,7 +177,7 @@ L.LayerGroup.include({
     var currentLayer = (this._currentLayer = this._snakingLayers[this._snakingLayersDone]);
 
     this._snakingLayersDone++;
-
+    this.fire("snakechange", { index: this._snakingLayersDone - 1 });
     this.addLayer(currentLayer);
     if ("snakeIn" in currentLayer) {
       currentLayer.once(
@@ -194,14 +196,18 @@ L.LayerGroup.include({
     } else {
       setTimeout(this._snakeNext.bind(this), this.options.snakePause);
     }
-    this.fire("snakechange");
+
     return this;
   },
   snakePause: function() {
+    if (!this._snaking) {
+      return this;
+    }
     this._snaking = false;
     if ("snakePause" in this._currentLayer) {
       this._currentLayer.snakePause();
     }
+    this.fire("snakepause");
     this._isChangeForNextOrPrev = false;
     return this;
   },
@@ -217,7 +223,7 @@ L.LayerGroup.include({
         this._currentLayer.snakePlay();
       }
     }
-
+    this.fire("snakeplay");
     return this;
   },
   snakeNext: function() {
@@ -237,11 +243,13 @@ L.LayerGroup.include({
     latlngs = L.LineUtil.isFlat(latlngs) ? latlngs : latlngs[0];
 
     this.fire("snake", { extData: latlngs });
+    this.fire("snakepause");
+    this.fire("snakechange", { index: this._snakingLayersDone  });
     this._isChangeForNextOrPrev = true;
     return this;
   },
   snakePrev: function() {
-    if (this._snakingLayersDone < 0) {
+    if (this._snakingLayersDone <= 0) {
       this._snakingLayersDone = 0;
       return this;
     }
@@ -256,6 +264,8 @@ L.LayerGroup.include({
     var latlngs = this._snakingLayers[this._snakingLayersDone === 0 ? 0 : this._snakingLayersDone - 1]._latlngs;
     latlngs = L.LineUtil.isFlat(latlngs) ? latlngs : latlngs[0];
     this.fire("snake", { extData: this._snakingLayersDone === 0 ? [latlngs[1], latlngs[0]] : latlngs });
+    this.fire("snakepause");
+    this.fire("snakechange", { index: this._snakingLayersDone});
     this._isChangeForNextOrPrev = true;
     return this;
   },
